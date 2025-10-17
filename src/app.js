@@ -2,6 +2,9 @@ const express = require('express');
 
 const app = express();
 
+app.get(/.*fly$/, (req, res) => {
+    res.send('fly');
+})
 
 app.get('/users', (req, res) => {
     res.send({name: "tanuj", age: 25});
@@ -21,6 +24,16 @@ app.patch('/users', (req, res) => {
 
 app.use('/test', (req, res) => {
     res.send('welcome to indian railways');
+})
+
+app.get('/hello', (req, res) => {
+    console.log(req.query);
+    res.send('theek h');
+})
+
+app.get('/hello/:userId', (req, res) => {
+    console.log(req.params);
+    res.send('hellllo');
 })
 
 app.listen(3000, (req, res) => {

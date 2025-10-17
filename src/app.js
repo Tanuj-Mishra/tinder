@@ -2,15 +2,22 @@ const express = require('express');
 
 const app = express();
 
-app.use('/hello', (req, res) => {
-    res.send('hello');
+
+app.get('/users', (req, res) => {
+    res.send({name: "tanuj", age: 25});
 })
 
-app.use('/hello/2', (req, res) => {
-    res.send('hey hey hey hello');
+app.post('/users', (req, res) => {
+    res.send('data saved to db');
 })
 
+app.delete('/users', (req, res) => {
+    res.send('data deleted from db');
+})
 
+app.patch('/users', (req, res) => {
+    res.send('data updated on db');
+})
 
 app.use('/test', (req, res) => {
     res.send('welcome to indian railways');

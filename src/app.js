@@ -1,4 +1,5 @@
 const express = require('express');
+const {peopleAuth} = require('./middlewares');
 
 const app = express();
 
@@ -102,7 +103,16 @@ app.get('/sample', (req, res, next) => {
 });
 
 
+// middlware usage understanding, for auth purpose
 
+
+app.get('/peoples/data', peopleAuth.authenticatePeople, (req, res) => {
+    res.send(`here's your data`);
+})
+
+app.delete('/peoples/data', peopleAuth.authenticatePeople, (req, res) => {
+    res.send('deleting your data');
+})
 
 app.listen(3000, (req, res) => {
     console.log('my ears are working, thank you for coming at port: 3000');

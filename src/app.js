@@ -67,6 +67,36 @@ app.get('/users', async(req, res) => {
     }
 })
 
+app.patch('/users/:id', async (req, res) => {
+    try {
+        const result = await User.findByIdAndUpdate(req.params.id, req.body);
+        res.send(result);
+    }
+    catch {
+        res.status(300).send('error occured while updating');
+    }
+})
+
+app.patch('/users/by-email/:emailId', async (req, res) => {
+    try {
+        const result = await User.findOneAndUpdate({emailId: req.params.emailId}, req.body);
+        res.send(result);
+    }
+    catch {
+        res.status(300).send('error occured while updating using emailid');
+    }
+})
+
+app.delete('/users/:id', async (req, res) => {
+    try {
+        const result = await User.findByIdAndDelete(req.params.id);
+        res.send(result);
+    }
+    catch{
+        res.status(300).send('some error occured while deleting the user');
+    }
+})
+
 database.connectDB()
     .then(() => {
         app.listen(3000, (req, res) => {

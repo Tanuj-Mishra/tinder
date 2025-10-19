@@ -12,8 +12,8 @@ app.post('/signup', async (req, res) => {
         .then(() =>{
             res.send('user added successfully');
         })
-        .catch(() => {
-            res.status(404).send('error occured while saving user');
+        .catch((error) => {
+            res.status(404).send(`error occured while saving user: ${error}`);
         })
     ;
 
@@ -33,9 +33,6 @@ app.get('/feed', async(req, res) => {
     }
 })
 
-// find user from given id
-// here whenever we provide incorrect id from postman, this directly hits the catch block.
-
 app.get('/users/:_id', async(req, res) => {
     try {
         const result = await User.findById(req.params._id).exec();
@@ -51,8 +48,6 @@ app.get('/users/:_id', async(req, res) => {
     }
 })
 
-
-// find one user by given email id
 app.get('/users', async(req, res) => {
     try {
         const result = await User.findOne({emailId: req.body.emailId});
@@ -67,13 +62,38 @@ app.get('/users', async(req, res) => {
     }
 })
 
+
+/**
+ * There is a pre-defined set of columns, which can be updated, and if the user sends anything 
+ * other than those, then:
+ * 
+ * 1. Those invalid fields will be removed from the update payload.
+ * 2. The names of the rejected keys will be collected and returned in the response.
+ * 
+ * This ensures that only the fields listed in ACCEPTABLE_INPUT are allowed to be updated.
+ * Any extra or unauthorized fields are ignored silently but reported back.
+ */
+
 app.patch('/users/:id', async (req, res) => {
     try {
-        const result = await User.findByIdAndUpdate(req.params.id, req.body);
-        res.send(result);
+        const ACCEPTABLE_INPUT = ["about", "photoUrl", "skills"];
+        let rejectedInputKeys = [];
+        for(const [key,val] of Object.entries(req.body)) {
+            if(!ACCEPTABLE_INPUT.includes(key)) {
+                delete req.body[key];
+                rejectedInputKeys.push(key);
+            }
+        }
+
+        if(req.body.skills?.length > 10) {
+            throw new Error("skills can't be more then 10")
+        }
+
+        const result = await User.findByIdAndUpdate(req.params.id, req.body,{runValidators: true});
+        res.send({result, rejectedInputKeys});
     }
-    catch {
-        res.status(300).send('error occured while updating');
+    catch(error) {
+        res.status(300).send('error occured while updating: ' + error);
     }
 })
 

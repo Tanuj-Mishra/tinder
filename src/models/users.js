@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
@@ -18,13 +19,23 @@ const userSchema = new Schema(
             require: true,
             unique: true,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            validate(value) {
+                if(!validator.isEmail(value)) {
+                    throw new Error("incorrect email id");
+                }
+            }
         },
         password: {
             type: String,
             require: true,
             trim: true,
-            unique: true
+            unique: true,
+            validate(value) {
+                if(!validator.isStrongPassword(value)) {
+                    throw new Error("weak password");
+                }
+            }
         },
         age: {
             type: Number,
@@ -32,7 +43,12 @@ const userSchema = new Schema(
         },
         photoUrl: {
             type: String,
-            default: "https://wallpapers.com/images/high/cool-profile-picture-ld8f4n1qemczkrig.webp"
+            default: "https://wallpapers.com/images/high/cool-profile-picture-ld8f4n1qemczkrig.webp",
+            validate(value) {
+                if(!validator.isURL(value)) {
+                    throw new Error("invalid url");
+                }
+            }
         },
         about: {
             type: String,

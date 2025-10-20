@@ -1,4 +1,4 @@
 
 module.exports = {
-    peopleAuth: require('./people-auth')
+    user: require('./user')
 }

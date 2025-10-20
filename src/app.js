@@ -1,28 +1,33 @@
 const express = require('express');
 const bycrpt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 const {database} = require('./config');
 const {User} = require('./models');
+const {user} = require('./middlewares');
 const app = express();
 
+const privateKey = 'abra_ka_dabra';
+
 app.use(express.json());
+app.use(cookieParser());
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', user.userAuth, async (req, res) => {
     try {
-
-        if(!req.body.password) {
-            throw new Error("Password missing");
-        }
-
-        req.body.password = await bycrpt.hash(req.body.password, 10);
-        
-        const user = new User(req.body);
-        const result = await user.save();
-        res.send(result);
+        res.send(req.user);
     } 
     catch (error) {
         res.status(404).send(`error occured while saving user: ${error}`);
     }
 
+})
+
+app.post('/sendConnectionRequst', user.userAuth, async (req, res) => {
+    try {
+        res.send(`request was sent by: ${req.user.firstName} ${req.user.lastName}`)
+    } catch (error) {
+        res.status(400).send('error occured while sending connection request: ' + error);
+    }
 })
 
 /**
@@ -41,7 +46,6 @@ app.post('/signup', async (req, res) => {
 app.post('/login', async (req, res) => {
     
     try {
-        console.log('hi');
         const inputEmailId = req.body.emailId;
         const inputPassword = req.body.password;
 
@@ -66,6 +70,8 @@ app.post('/login', async (req, res) => {
             throw new Error("Invalid credentials");
         }
 
+        const token = await jwt.sign({_id: result._id}, privateKey, {expiresIn: '1d'});
+        res.cookie('token', token, {expires: new Date(Date.now() + 24 * 3600000)});
         res.send('logged in');
 
     } catch (error) {
@@ -74,6 +80,28 @@ app.post('/login', async (req, res) => {
 
 })
 
+app.post('/profile', async(req, res) => {
+    try {
+        const {token} = req.cookies;
+        if(!token) {
+            throw new Error("User logged out");
+        }
+        
+        // finding id from token
+        const {_id} = await jwt.verify(token, privateKey);
+
+        // find id from given emailid
+        const result = await User.findById(_id);
+
+        res.send(result);
+        
+    } catch (error) {
+        res.status(401).send(`error occured while getting profile: ${error}`);
+    }
+
+
+    res.send('thawas kr le bhai ji ke');
+})
 
 app.get('/feed', async(req, res) => {
     try {

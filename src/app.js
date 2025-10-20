@@ -1,23 +1,79 @@
 const express = require('express');
+const bycrpt = require('bcrypt');
 const {database} = require('./config');
 const {User} = require('./models');
 const app = express();
 
-
 app.use(express.json());
 
 app.post('/signup', async (req, res) => {
-    const user = new User(req.body);
-    await user.save()
-        .then(() =>{
-            res.send('user added successfully');
-        })
-        .catch((error) => {
-            res.status(404).send(`error occured while saving user: ${error}`);
-        })
-    ;
+    try {
+
+        if(!req.body.password) {
+            throw new Error("Password missing");
+        }
+
+        req.body.password = await bycrpt.hash(req.body.password, 10);
+        
+        const user = new User(req.body);
+        const result = await user.save();
+        res.send(result);
+    } 
+    catch (error) {
+        res.status(404).send(`error occured while saving user: ${error}`);
+    }
 
 })
+
+/**
+ * Handles user login.
+ *
+ * Process:
+ * 1. Accepts email and plaintext password from the request body.
+ * 2. Validates that both email and password are provided.
+ * 3. Retrieves the user from the database using the provided email.
+ * 4. If the user exists, compares the provided plaintext password with the hashed password stored in the database using bcrypt.
+ * 5. Returns appropriate responses based on validation, authentication success, or failure.
+ * 6. Handles errors gracefully and returns meaningful error messages.
+ */
+
+
+app.post('/login', async (req, res) => {
+    
+    try {
+        console.log('hi');
+        const inputEmailId = req.body.emailId;
+        const inputPassword = req.body.password;
+
+        if (!inputEmailId && !inputPassword) {
+            throw new Error("Email and Password missing");
+        }
+        else if(!inputEmailId) {
+            throw new Error("Email missing");
+        }
+        else if(!inputPassword) {
+            throw new Error("Password missing");
+        }
+
+        const result = await User.findOne({emailId: req.body.emailId});
+        if(!result) {
+            // throw new Error("User not present");
+            throw new Error("Invalid credentials");
+        }
+        const compare = await bycrpt.compare(inputPassword, result.password);
+        if(!compare) {
+            // throw new Error("Incorrect password");
+            throw new Error("Invalid credentials");
+        }
+
+        res.send('logged in');
+
+    } catch (error) {
+        res.status(300).send(`error occured while logging in: ${error}`);
+    }
+
+})
+
 
 app.get('/feed', async(req, res) => {
     try {
@@ -118,14 +174,14 @@ app.delete('/users/:id', async (req, res) => {
 })
 
 database.connectDB()
-    .then(() => {
+.then(() => {
         app.listen(3000, (req, res) => {
             console.log('my ears are working, thank you for coming at port: 3000');
         })
         console.log('database connected');
     })
-    .catch(() => {
-        console.log('error occured');
+    .catch((error) => {
+        console.log('error occured', error);
     })
 
 

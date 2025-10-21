@@ -58,19 +58,17 @@ app.post('/login', async (req, res) => {
         else if(!inputPassword) {
             throw new Error("Password missing");
         }
-
         const result = await User.findOne({emailId: req.body.emailId});
         if(!result) {
             // throw new Error("User not present");
             throw new Error("Invalid credentials");
         }
-        const compare = await bycrpt.compare(inputPassword, result.password);
+        const compare = await result.validatePassword(inputPassword);
         if(!compare) {
             // throw new Error("Incorrect password");
             throw new Error("Invalid credentials");
         }
-
-        const token = await jwt.sign({_id: result._id}, privateKey, {expiresIn: '1d'});
+        const token = await result.getJWT();
         res.cookie('token', token, {expires: new Date(Date.now() + 24 * 3600000)});
         res.send('logged in');
 
@@ -99,8 +97,6 @@ app.post('/profile', async(req, res) => {
         res.status(401).send(`error occured while getting profile: ${error}`);
     }
 
-
-    res.send('thawas kr le bhai ji ke');
 })
 
 app.get('/feed', async(req, res) => {

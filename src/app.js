@@ -99,50 +99,6 @@ app.post('/profile', async(req, res) => {
 
 })
 
-app.get('/feed', async(req, res) => {
-    try {
-        const result = await User.find({});
-        if(Object.keys(result).length !== 0) {
-            res.send(result);
-        }
-        else {
-            res.status(300).send('no user defined');
-        }
-    } catch (error) {
-        res.status(401).send('internal server error');
-    }
-})
-
-app.get('/users/:_id', async(req, res) => {
-    try {
-        const result = await User.findById(req.params._id).exec();
-        if(!result) {
-            res.status(301).send('no user found for given id');
-        }
-        else {
-            res.send(result);
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(401).send('internal server errror');
-    }
-})
-
-app.get('/users', async(req, res) => {
-    try {
-        const result = await User.findOne({emailId: req.body.emailId});
-        if(!result) {
-            res.status(301).send('no user found for given email id');
-        }
-        else {
-            res.send(result);
-        }
-    } catch (error) {
-        res.status(401).send('internal server errror');
-    }
-})
-
-
 /**
  * There is a pre-defined set of columns, which can be updated, and if the user sends anything 
  * other than those, then:

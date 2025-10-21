@@ -23,4 +23,27 @@ const userAuth = async (req, res, next) => {
 
 }
 
-module.exports = {userAuth};
+const optionalUserAuth = async (req, res, next) => {
+
+    try {
+        const {token} = req.cookies;
+        if(!token) {
+            throw new Error("User logged out");
+        }
+        
+        // finding id from token
+        const {_id} = await jwt.verify(token, privateKey);
+
+        // find user from given id
+        req.user = await User.findById(_id);
+
+    } catch (error) {
+        console.log('it might be guest');
+    } finally {
+        next();
+    }
+
+
+}
+
+module.exports = {userAuth, optionalUserAuth};

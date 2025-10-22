@@ -7,8 +7,7 @@ const {User, ConnectionRequest} = require('../../models');
 router.post('/send/:status/:toUserId', user.userAuth, async (req, res) => {
     try {
         const fromUserId = req.user._id;
-        const status = req.params.status;
-        const toUserId = req.params.toUserId;
+        const {status, toUserId} = req.params;
 
         // whether they are present or not
         if(!status && !toUserId) {
@@ -50,6 +49,46 @@ router.post('/send/:status/:toUserId', user.userAuth, async (req, res) => {
 
     } catch (error) {
         res.status(400).send(`error occured while making request for connection: ${error}`);
+    }
+})
+
+router.post('/review/:status/:requestId', user.userAuth, async (req, res) => {
+    try {
+        const user = req.user;
+        const {status, requestId} = req.params;
+
+        if(!status && !requestId) {
+            throw new Error('status and requestId missing');
+        }
+        else if(!status) {
+            throw new Error('status missing');
+        }
+        else if(!requestId) {
+            throw new Error('requestid missing');
+        }
+
+        if(!["accepted", "rejected"].includes(status)) {
+            throw new Error(`invalid status: ${status}`);
+        }
+
+        const connectionRequest = await ConnectionRequest.findOne({
+            _id: requestId,
+            toUserId: user._id,
+            status: "interested"
+        })
+
+        if(!connectionRequest) {
+            throw new Error('Connection request not found');
+        }
+
+        connectionRequest.status = status;
+        const result = await connectionRequest.save();
+
+        res.send(result);
+
+
+    } catch (error) {
+        res.status(301).send(`error occur while reviewing request: ${error}`);
     }
 })
 

@@ -62,14 +62,18 @@ const userSchema = new Schema(
         },
         gender: {
             type: String,
-            validate: (value) => {
-                if(!["male", "female"].includes(value)) {
-                    throw new Error("incorrect gender provided");        
-                }
-                else {
-                    return true;
-                }
-            }
+            enum: {
+                values: ["male", "female"],
+                // message: `${VALUE} is not valid gender`
+            },
+            // validate: (value) => {
+            //     if(!["male", "female"].includes(value)) {
+            //         throw new Error("incorrect gender provided");        
+            //     }
+            //     else {
+            //         return true;
+            //     }
+            // }
         }
     }, 
     {
